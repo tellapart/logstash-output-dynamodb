@@ -8,7 +8,7 @@ require "securerandom"
 # An example output that does nothing.
 class LogStash::Outputs::DynamoDB < LogStash::Outputs::Base
   config_name "dynamodb"
-  config :credentials_file, :validate => :string, :required => true
+  config :credentials_file, :validate => :string, :required => false
   config :table_name, :validate => :string, :required => true
   config :region, :validate => :string, :required => true
   config :fields, :validate => :array, :required => true
@@ -21,9 +21,11 @@ class LogStash::Outputs::DynamoDB < LogStash::Outputs::Base
   public
   def register
     # load credentials from disk
-    puts "Reading credentials from " + @credentials_file
-    creds = YAML.load(File.read(@credentials_file))
-    Aws.config[:credentials] = Aws::Credentials.new(creds['access_key_id'],creds['secret_access_key'])
+    if @credentials_file
+      puts "Reading credentials from " + @credentials_file
+      creds = YAML.load(File.read(@credentials_file))
+      Aws.config[:credentials] = Aws::Credentials.new(creds['access_key_id'],creds['secret_access_key'])
+    end
     puts "Setting region " + @region
     Aws.config[:region] = @region
     puts "Creating DynamoDB client"
@@ -83,7 +85,6 @@ class LogStash::Outputs::DynamoDB < LogStash::Outputs::Base
           message[x] = event[x].to_s
         end
       end
-    
       @dynamodb.put_item(:table_name => @table_name, :item => message)
   end # def event
 end # class LogStash::Outputs::Example
