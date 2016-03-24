@@ -50,14 +50,14 @@ bundle exec rspec
 
 #### 2.1 Example configuration
 
-Create a YAML file with your AWS credentials:
+- Create a YAML file with your AWS credentials:
 ```yaml
 ---
 access_key_id: <key_id>
 secret_access_key: <secret>
 ```
 
-Add the dynamodb section to your logstash configuration
+- Add the dynamodb section to your logstash configuration
 ```ruby
 output {
   dynamodb {
@@ -84,6 +84,13 @@ gem build logstash-output-dynamodb.gemspec
 bin/plugin install /your/local/plugin/logstash-output-dynamodb-0.0.1.gem
 ```
 - Start Logstash and proceed to test the plugin
+
+#### 3 Package into RPM
+
+- You can build an rpm using fpm that installs the plugin in logstash, run:
+```sh
+make all
+```
 
 ## Contributing
 
