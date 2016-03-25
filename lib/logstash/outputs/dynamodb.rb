@@ -1,11 +1,10 @@
 # encoding: utf-8
-require "logstash/outputs/base"
-require "logstash/namespace"
 require "aws-sdk-core"
-require "yaml"
+require "logstash/namespace"
+require "logstash/outputs/base"
 require "securerandom"
+require "yaml"
 
-# An example output that does nothing.
 class LogStash::Outputs::DynamoDB < LogStash::Outputs::Base
   config_name "dynamodb"
   config :credentials_file, :validate => :string, :required => false
@@ -16,12 +15,20 @@ class LogStash::Outputs::DynamoDB < LogStash::Outputs::Base
   config :sort_field, :validate => :string, :required => false
   config :make_sort_unique, :required => false
 
+  declare_threadsafe! if self.respond_to?(:declare_threadsafe!)
   @dynamodb = nil
 
   public
+  def self.threadsafe?
+     @threadsafe == true
+  end
+
+  public
   def register
-    # load credentials from disk
+    Aws.eager_autoload!
+    @threadsafe = true
     if @credentials_file
+      # load credentials from disk
       puts "Reading credentials from " + @credentials_file
       creds = YAML.load(File.read(@credentials_file))
       Aws.config[:credentials] = Aws::Credentials.new(creds['access_key_id'],creds['secret_access_key'])
@@ -29,7 +36,9 @@ class LogStash::Outputs::DynamoDB < LogStash::Outputs::Base
     puts "Setting region " + @region
     Aws.config[:region] = @region
     puts "Creating DynamoDB client"
+
     @dynamodb = Aws::DynamoDB::Client.new
+
     begin
       # check if dynamodb table exists
       puts "Checking for table " + @table_name
